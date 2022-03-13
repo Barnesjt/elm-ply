@@ -7,6 +7,7 @@ import List exposing (drop)
 import List exposing (take)
 import Math.Vector3 exposing (vec3, distance)
 import List.Extra
+import Tuple3
 
 type alias PlyModel = 
   { verts : List Vert
@@ -35,10 +36,11 @@ type alias Face =
 
 type alias Corner =
   { v : Int
+  , t : Int
   , p : Int
   , n : Int
-  , t : Int
   , o : Int
+  , i : Int
   }
 
 parsePly : String -> Maybe PlyModel
@@ -53,6 +55,7 @@ parsePly input =
     faceLines = drop numVert noHeadLines
     vertList = parseVerts vertLines
     faceList = parseFaces faceLines
+    cornerList = makeCorners faceList |> Debug.log "cornerList"
 
   in 
     if (numVert == 0 || numFace == 0 || headerEnd == 0)
@@ -62,10 +65,58 @@ parsePly input =
         { verts = vertList
         , edges = []
         , faces = faceList
-        , corners = []
+        , corners = cornerList
         , nvert = numVert
         , nface = numFace
         }
+
+sortCorners : List Corner -> List Corner
+sortCorners corners = List.sortWith cornerComp corners
+
+cornerComp : { a | n : comparable, p : comparable } -> { b | n : comparable, p : comparable } -> Order
+cornerComp c1 c2 =
+  let minC1 = min c1.n c1.p
+      minC2 = min c2.n c2.p
+      maxC1 = max c1.n c1.p
+      maxC2 = max c2.n c2.p
+  in
+  if (minC1 < minC2) then LT
+  else if minC1 == minC2
+    then if maxC1 < maxC2 then LT
+    else GT
+  else GT
+
+
+
+makeCorners : List Face -> List Corner
+makeCorners faces = 
+  List.indexedMap makeCorner faces 
+    |> List.concat
+    |> sortCorners
+    |> addCornerOps
+
+addCornerOps : List Corner -> List Corner
+addCornerOps corners = case corners of
+    [] -> []
+    (c::[]) -> [c]
+    (c1::c2::cs) -> 
+      let minC1 = min c1.n c1.p
+          minC2 = min c2.n c2.p
+          maxC1 = max c1.n c1.p
+          maxC2 = max c2.n c2.p
+      in if minC1 == minC2 && maxC1 == maxC2 then
+        {c1 | o = c2.i} :: {c2 | o = c1.i} :: addCornerOps cs
+        else c1 :: addCornerOps (c2::cs)
+
+
+makeCorner : Int -> Face -> List Corner
+makeCorner index face =
+  let
+    c1 = Corner (Tuple3.first face.verts) index (Tuple3.third face.verts) (Tuple3.second face.verts) (-1) (index * 3)
+    c2 = Corner (Tuple3.second face.verts) index (Tuple3.first face.verts) (Tuple3.third face.verts) (-1) (index * 3 + 1)
+    c3 = Corner (Tuple3.third face.verts) index (Tuple3.second face.verts) (Tuple3.first face.verts) (-1) (index * 3 + 2)
+  in [c1,c2,c3]
+
 
 getNumVert : List String -> Maybe Int
 getNumVert input =
