@@ -8,6 +8,10 @@ import List exposing (take)
 import Math.Vector3 exposing (vec3, distance)
 import List.Extra
 import Tuple3
+import List exposing (foldl)
+import BoundingBox2d exposing (minY)
+import Math.Vector3 exposing (getX, getY, getZ)
+import Basics.Extra exposing (maxSafeInteger, minSafeInteger)
 
 type alias PlyModel = 
   { verts : List Vert
@@ -16,6 +20,9 @@ type alias PlyModel =
   , corners : List Corner
   , nvert : Int
   , nface : Int
+  , minCoord : Vec3
+  , center : Vec3
+  , maxCoord : Vec3
   }
 
 type alias Vert =
@@ -56,6 +63,7 @@ parsePly input =
     vertList = parseVerts vertLines
     faceList = parseFaces faceLines
     cornerList = makeCorners faceList |> Debug.log "cornerList"
+    vertSpan = plyMinCenterMax vertList
 
   in 
     if (numVert == 0 || numFace == 0 || headerEnd == 0)
@@ -68,7 +76,27 @@ parsePly input =
         , corners = cornerList
         , nvert = numVert
         , nface = numFace
+        , minCoord = vertSpan.min
+        , center = vertSpan.center
+        , maxCoord = vertSpan.max
         }
+
+plyMinCenterMax : List Vert -> {min:Vec3, center:Vec3, max:Vec3}
+plyMinCenterMax verts = 
+  let minX = List.foldl (\v acc -> getX v.position |> min acc ) maxSafeInteger verts
+      minY = List.foldl (\v acc -> getY v.position |> min acc ) maxSafeInteger verts
+      minZ = List.foldl (\v acc -> getZ v.position |> min acc ) maxSafeInteger verts
+      maxX = List.foldl (\v acc -> getX v.position |> max acc ) minSafeInteger verts
+      maxY = List.foldl (\v acc -> getY v.position |> max acc ) minSafeInteger verts
+      maxZ = List.foldl (\v acc -> getZ v.position |> max acc ) minSafeInteger verts
+      midX = ((maxX - minX) / 2.0) + minX
+      midY = ((maxY - minY) / 2.0) + minY
+      midZ = ((maxZ - minZ) / 2.0) + minZ
+  in
+    { min = vec3 minX minY minZ
+    , center = vec3 midX midY midZ
+    , max = vec3 maxX maxY maxZ
+    }
 
 sortCorners : List Corner -> List Corner
 sortCorners corners = List.sortWith cornerComp corners
@@ -93,11 +121,11 @@ makeCorners faces =
   List.indexedMap makeCorner faces 
     |> List.concat
     |> sortCorners
-    |> addCornerOps
+    |> addCornerOps []
 
-addCornerOps : List Corner -> List Corner
-addCornerOps corners = case corners of
-    [] -> []
+addCornerOps : List Corner -> List Corner -> List Corner
+addCornerOps corners res = case corners of
+    [] -> res
     (c::[]) -> [c]
     (c1::c2::cs) -> 
       let minC1 = min c1.n c1.p
@@ -105,8 +133,8 @@ addCornerOps corners = case corners of
           maxC1 = max c1.n c1.p
           maxC2 = max c2.n c2.p
       in if minC1 == minC2 && maxC1 == maxC2 then
-        {c1 | o = c2.i} :: {c2 | o = c1.i} :: addCornerOps cs
-        else c1 :: addCornerOps (c2::cs)
+        addCornerOps cs ({c1 | o = c2.i} :: {c2 | o = c1.i} :: res)
+        else addCornerOps (c1::res) (c2::cs)
 
 
 makeCorner : Int -> Face -> List Corner

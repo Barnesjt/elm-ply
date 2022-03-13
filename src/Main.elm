@@ -9,7 +9,7 @@ import Color
 import Direction3d
 import File exposing(File)
 import File.Select as Select
-import Html exposing (Html, button, p, text)
+import Html exposing (Html, button, p, text, div)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Illuminance
@@ -35,6 +35,8 @@ import Point3d exposing (Point3d)
 import Vector3d exposing (Vector3d)
 import TriangularMesh exposing (TriangularMesh)
 import Math.Vector3 exposing (Vec3, getX, getY, getZ)
+import Ply exposing (PlyModel)
+import Html.Attributes exposing (height)
 
 type WorldCoordinates
     = WorldCoordinates
@@ -49,6 +51,9 @@ type alias Model =
   , mesh1 : Mesh.Uniform WorldCoordinates
   , ply : Maybe String
   , filename : String
+  , centerX : Float
+  , centerY : Float
+  , centerZ : Float
   }
 
 init : () -> ( Model, Cmd Msg )
@@ -61,6 +66,9 @@ init () =
     , mesh1 = Mesh.facets [Triangle3d.from (Point3d.meters 0 0 0) (Point3d.meters 1 0 0) (Point3d.meters 1 1 0) ]
     , ply = Nothing
     , filename = ""
+    , centerX = 0
+    , centerY = 0
+    , centerZ = 0
     }
   , Task.perform
       (\{ viewport } ->
@@ -71,9 +79,9 @@ init () =
       Browser.Dom.getViewport
   )
 
-parsePlyToMesh : String -> Mesh.Uniform WorldCoordinates
+parsePlyToMesh : String -> (Maybe PlyModel, Mesh.Uniform WorldCoordinates)
 parsePlyToMesh ply = case parsePly ply of
-  Nothing -> Mesh.facets [Triangle3d.from (Point3d.meters 0 0 0) (Point3d.meters 1 0 0) (Point3d.meters 1 1 0) ]
+  Nothing -> (Nothing, Mesh.facets [Triangle3d.from (Point3d.meters 0 0 0) (Point3d.meters 1 0 0) (Point3d.meters 1 1 0) ])
   Just x ->
     let
       extractVert v =
@@ -82,7 +90,7 @@ parsePlyToMesh ply = case parsePly ply of
         }
       verts = List.map extractVert x.verts |> Array.fromList
       faces = List.map (\f -> f.verts) x.faces
-    in  TriangularMesh.indexed verts faces |> Mesh.indexedFaces
+    in  (Just x,TriangularMesh.indexed verts faces |> Mesh.indexedFaces)
 
 type Msg
   = Resize (Quantity Int Pixels) (Quantity Int Pixels)
@@ -100,9 +108,16 @@ update msg model =
     PlyRequested -> (model, Select.file [] PlySelected)
     PlySelected file -> ({model | filename= File.name file}, Task.perform PlyLoaded (File.toString file) )
     PlyLoaded content ->
-      ( { model | mesh1 = parsePlyToMesh content, ply = Just content }
-      , Cmd.none
-      )
+      let (plyOut, meshOut) = parsePlyToMesh content
+      in case plyOut of
+        Nothing -> ( { model | mesh1 = meshOut, ply = Just content }, Cmd.none)
+        Just p -> ( { model | mesh1 = meshOut
+                    , ply = Just content 
+                    , centerX = getX p.center
+                    , centerY = getY p.center
+                    , centerZ = getZ p.center
+                    }, Cmd.none)
+      
     MouseDown -> ( { model | orbiting = True }, Cmd.none )
     MouseUp -> ( { model | orbiting = False }, Cmd.none )
     MouseMove dx dy ->
@@ -140,14 +155,21 @@ view model =
     Nothing ->
       { title = "Please select a Ply file"
       , body = 
-        [ button [ onClick PlyRequested ] [ text "Load PLY" ]]
+        [ div 
+          [ style "position" "absolute"
+          , style "top" "5px"
+          , style "left" "5px"
+          , style "z-index" "3"
+          ]
+          [ button [ onClick PlyRequested] [ text "Load PLY" ] ]
+        ]
       }
       
     Just _ ->
       let
         viewpoint =
             Viewpoint3d.orbitZ
-                { focalPoint = Point3d.meters 0.5 0.5 0
+                { focalPoint = Point3d.meters model.centerX model.centerY model.centerZ
                 , azimuth = model.azimuth
                 , elevation = model.elevation
                 , distance = Length.meters 3
@@ -168,7 +190,14 @@ view model =
       in
       { title = "Viewing " ++ model.filename
       , body =
-        [ Scene3d.custom
+        [ div 
+          [ style "position" "absolute"
+          , style "top" "5px"
+          , style "left" "5px"
+          , style "z-index" "3"
+          ]
+          [ button [ onClick PlyRequested] [ text "Load PLY" ] ]
+        , Scene3d.custom
           { camera = camera
           , clipDepth = Length.meters 0.1
           , dimensions = ( model.width, model.height )
