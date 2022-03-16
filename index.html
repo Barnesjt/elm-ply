@@ -7372,6 +7372,18 @@ var $ianmackenzie$elm_units$Angle$radians = function (numRadians) {
 var $ianmackenzie$elm_units$Angle$degrees = function (numDegrees) {
 	return $ianmackenzie$elm_units$Angle$radians($elm$core$Basics$pi * (numDegrees / 180));
 };
+var $elm_explorations$linear_algebra$Math$Vector3$vec3 = _MJS_v3;
+var $author$project$Ply$emptyPly = {
+	center: A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+	corners: _List_Nil,
+	edges: _List_Nil,
+	faces: _List_Nil,
+	maxCoord: A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+	minCoord: A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+	nface: 0,
+	nvert: 0,
+	verts: _List_Nil
+};
 var $ianmackenzie$elm_3d_scene$Scene3d$Types$EmptyMesh = {$: 'EmptyMesh'};
 var $ianmackenzie$elm_3d_scene$Scene3d$Types$Facets = F4(
 	function (a, b, c, d) {
@@ -7661,6 +7673,7 @@ var $author$project$Main$init = function (_v0) {
 			centerX: 0,
 			centerY: 0,
 			centerZ: 0,
+			clersRes: '',
 			elevation: $ianmackenzie$elm_units$Angle$degrees(30),
 			filename: '',
 			height: $ianmackenzie$elm_units$Quantity$zero,
@@ -7675,6 +7688,7 @@ var $author$project$Main$init = function (_v0) {
 					])),
 			orbiting: false,
 			ply: $elm$core$Maybe$Nothing,
+			savedPly: $author$project$Ply$emptyPly,
 			width: $ianmackenzie$elm_units$Quantity$zero
 		},
 		A2(
@@ -8179,6 +8193,404 @@ var $ianmackenzie$elm_units$Quantity$clamp = F3(
 			A3($elm$core$Basics$clamp, lower, upper, value)) : $ianmackenzie$elm_units$Quantity$Quantity(
 			A3($elm$core$Basics$clamp, upper, lower, value));
 	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm_community$list_extra$List$Extra$getAt = F2(
+	function (idx, xs) {
+		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
+			A2($elm$core$List$drop, idx, xs));
+	});
+var $elm_explorations$linear_algebra$Math$Vector3$sub = _MJS_v3sub;
+var $author$project$Edgebreaker$compressInit = function (ply) {
+	var initTri = 0;
+	var _v0 = A2($elm_community$list_extra$List$Extra$getAt, initTri, ply.corners);
+	if (_v0.$ === 'Nothing') {
+		return $elm$core$Result$Err('Cannot get first corner');
+	} else {
+		var c = _v0.a;
+		var _v1 = A2($elm_community$list_extra$List$Extra$getAt, c.p, ply.corners);
+		if (_v1.$ === 'Nothing') {
+			return $elm$core$Result$Err('Cannot get second corner');
+		} else {
+			var p = _v1.a;
+			var _v2 = A2($elm_community$list_extra$List$Extra$getAt, c.n, ply.corners);
+			if (_v2.$ === 'Nothing') {
+				return $elm$core$Result$Err('Cannot get second corner');
+			} else {
+				var n = _v2.a;
+				var _v3 = A2($elm_community$list_extra$List$Extra$getAt, c.v, ply.verts);
+				if (_v3.$ === 'Nothing') {
+					return $elm$core$Result$Err('Cannot get vert of first corner');
+				} else {
+					var cVert = _v3.a;
+					var _v4 = A2($elm_community$list_extra$List$Extra$getAt, p.v, ply.verts);
+					if (_v4.$ === 'Nothing') {
+						return $elm$core$Result$Err('Cannot get vert of second corner');
+					} else {
+						var pVert = _v4.a;
+						var _v5 = A2($elm_community$list_extra$List$Extra$getAt, n.v, ply.verts);
+						if (_v5.$ === 'Nothing') {
+							return $elm$core$Result$Err('Cannot get vert of third corner');
+						} else {
+							var nVert = _v5.a;
+							var u = _List_fromArray(
+								[initTri]);
+							var m = _List_fromArray(
+								[c.v, n.v, p.v]);
+							var deltInit = _List_fromArray(
+								[
+									A2($elm_explorations$linear_algebra$Math$Vector3$sub, nVert.position, cVert.position),
+									A2($elm_explorations$linear_algebra$Math$Vector3$sub, cVert.position, pVert.position),
+									pVert.position
+								]);
+							return $elm$core$Result$Ok(
+								{
+									clers: _List_fromArray(
+										[
+											_Utils_chr('C')
+										]),
+									delta: deltInit,
+									next: c.o,
+									ply: ply,
+									vTri: u,
+									vVert: m
+								});
+						}
+					}
+				}
+			}
+		}
+	}
+};
+var $elm_explorations$linear_algebra$Math$Vector3$add = _MJS_v3add;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$Debug$toString = _Debug_toString;
+var $author$project$Edgebreaker$compressWithState = function (state) {
+	compressWithState:
+	while (true) {
+		var _v0 = A2($elm_community$list_extra$List$Extra$getAt, state.next, state.ply.corners);
+		if (_v0.$ === 'Nothing') {
+			return $elm$core$Result$Err(
+				'Failed to get corner ' + $elm$core$Debug$toString(state.next));
+		} else {
+			var c = _v0.a;
+			var rTri = function () {
+				var _v19 = A2($elm_community$list_extra$List$Extra$getAt, c.n, state.ply.corners);
+				if (_v19.$ === 'Nothing') {
+					return $elm$core$Result$Err(
+						'Failed to get corner ' + $elm$core$Debug$toString(c.n));
+				} else {
+					var n = _v19.a;
+					var _v20 = A2($elm_community$list_extra$List$Extra$getAt, n.o, state.ply.corners);
+					if (_v20.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get corner ' + $elm$core$Debug$toString(n.o));
+					} else {
+						var o = _v20.a;
+						return $elm$core$Result$Ok(o);
+					}
+				}
+			}();
+			var newVTri = A2($elm$core$List$cons, c.t, state.vTri);
+			var lTri = function () {
+				var _v17 = A2($elm_community$list_extra$List$Extra$getAt, c.p, state.ply.corners);
+				if (_v17.$ === 'Nothing') {
+					return $elm$core$Result$Err(
+						'Failed to get corner ' + $elm$core$Debug$toString(c.p));
+				} else {
+					var p = _v17.a;
+					var _v18 = A2($elm_community$list_extra$List$Extra$getAt, p.o, state.ply.corners);
+					if (_v18.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get corner ' + $elm$core$Debug$toString(p.o));
+					} else {
+						var o = _v18.a;
+						return $elm$core$Result$Ok(o);
+					}
+				}
+			}();
+			if (!A2($elm$core$List$member, c.v, state.vVert)) {
+				var newVVert = A2($elm$core$List$cons, c.v, state.vVert);
+				var newClers = A2(
+					$elm$core$List$cons,
+					_Utils_chr('C'),
+					state.clers);
+				var cvPos = function () {
+					var _v13 = A2($elm_community$list_extra$List$Extra$getAt, c.v, state.ply.verts);
+					if (_v13.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get vertex ' + $elm$core$Debug$toString(c.v));
+					} else {
+						var cv = _v13.a;
+						return $elm$core$Result$Ok(cv.position);
+					}
+				}();
+				var cpvPos = function () {
+					var _v11 = A2($elm_community$list_extra$List$Extra$getAt, c.p, state.ply.corners);
+					if (_v11.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get corner ' + $elm$core$Debug$toString(c.p));
+					} else {
+						var cp = _v11.a;
+						var _v12 = A2($elm_community$list_extra$List$Extra$getAt, cp.v, state.ply.verts);
+						if (_v12.$ === 'Nothing') {
+							return $elm$core$Result$Err(
+								'Failed to get vertex ' + $elm$core$Debug$toString(cp.v));
+						} else {
+							var cpv = _v12.a;
+							return $elm$core$Result$Ok(cpv.position);
+						}
+					}
+				}();
+				var covPos = function () {
+					var _v9 = A2($elm_community$list_extra$List$Extra$getAt, c.o, state.ply.corners);
+					if (_v9.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get corner ' + $elm$core$Debug$toString(c.o));
+					} else {
+						var co = _v9.a;
+						var _v10 = A2($elm_community$list_extra$List$Extra$getAt, co.v, state.ply.verts);
+						if (_v10.$ === 'Nothing') {
+							return $elm$core$Result$Err(
+								'Failed to get vertex ' + $elm$core$Debug$toString(co.v));
+						} else {
+							var cov = _v10.a;
+							return $elm$core$Result$Ok(cov.position);
+						}
+					}
+				}();
+				var cnvPos = function () {
+					var _v7 = A2($elm_community$list_extra$List$Extra$getAt, c.n, state.ply.corners);
+					if (_v7.$ === 'Nothing') {
+						return $elm$core$Result$Err(
+							'Failed to get corner ' + $elm$core$Debug$toString(c.n));
+					} else {
+						var cn = _v7.a;
+						var _v8 = A2($elm_community$list_extra$List$Extra$getAt, cn.v, state.ply.verts);
+						if (_v8.$ === 'Nothing') {
+							return $elm$core$Result$Err(
+								'Failed to get vertex ' + $elm$core$Debug$toString(cn.v));
+						} else {
+							var cnv = _v8.a;
+							return $elm$core$Result$Ok(cnv.position);
+						}
+					}
+				}();
+				var deltToAdd = function () {
+					if (cvPos.$ === 'Err') {
+						return cvPos;
+					} else {
+						var cvP = cvPos.a;
+						if (cpvPos.$ === 'Err') {
+							return cpvPos;
+						} else {
+							var cpvP = cpvPos.a;
+							if (cnvPos.$ === 'Err') {
+								return cnvPos;
+							} else {
+								var cnvP = cnvPos.a;
+								if (covPos.$ === 'Err') {
+									return covPos;
+								} else {
+									var covP = covPos.a;
+									return $elm$core$Result$Ok(
+										A2(
+											$elm_explorations$linear_algebra$Math$Vector3$add,
+											A2(
+												$elm_explorations$linear_algebra$Math$Vector3$sub,
+												A2($elm_explorations$linear_algebra$Math$Vector3$sub, cvP, cpvP),
+												cnvP),
+											covP));
+								}
+							}
+						}
+					}
+				}();
+				if (rTri.$ === 'Err') {
+					var e = rTri.a;
+					return $elm$core$Result$Err(e);
+				} else {
+					var rt = rTri.a;
+					if (deltToAdd.$ === 'Err') {
+						var e = deltToAdd.a;
+						return $elm$core$Result$Err(e);
+					} else {
+						var delt = deltToAdd.a;
+						var newState = _Utils_update(
+							state,
+							{
+								clers: newClers,
+								delta: A2($elm$core$List$cons, delt, state.delta),
+								next: rt.i,
+								vTri: newVTri,
+								vVert: newVVert
+							});
+						var $temp$state = newState;
+						state = $temp$state;
+						continue compressWithState;
+					}
+				}
+			} else {
+				if (rTri.$ === 'Err') {
+					var e = rTri.a;
+					return $elm$core$Result$Err(e);
+				} else {
+					var rT = rTri.a;
+					if (lTri.$ === 'Err') {
+						var e = lTri.a;
+						return $elm$core$Result$Err(e);
+					} else {
+						var lT = lTri.a;
+						if (A2($elm$core$List$member, rT.t, state.vTri)) {
+							if (A2($elm$core$List$member, lT.t, state.vTri)) {
+								var newState = _Utils_update(
+									state,
+									{
+										clers: A2(
+											$elm$core$List$cons,
+											_Utils_chr('E'),
+											state.clers),
+										vTri: newVTri
+									});
+								return $elm$core$Result$Ok(newState);
+							} else {
+								var newState = _Utils_update(
+									state,
+									{
+										clers: A2(
+											$elm$core$List$cons,
+											_Utils_chr('R'),
+											state.clers),
+										next: lT.i,
+										vTri: newVTri
+									});
+								var $temp$state = newState;
+								state = $temp$state;
+								continue compressWithState;
+							}
+						} else {
+							if (A2($elm$core$List$member, lT.t, state.vTri)) {
+								var newState = _Utils_update(
+									state,
+									{
+										clers: A2(
+											$elm$core$List$cons,
+											_Utils_chr('L'),
+											state.clers),
+										next: rT.i,
+										vTri: newVTri
+									});
+								var $temp$state = newState;
+								state = $temp$state;
+								continue compressWithState;
+							} else {
+								var newState = _Utils_update(
+									state,
+									{
+										clers: A2(
+											$elm$core$List$cons,
+											_Utils_chr('S'),
+											state.clers),
+										next: rT.i,
+										vTri: newVTri
+									});
+								var splitCompress = $author$project$Edgebreaker$compressWithState(newState);
+								if (splitCompress.$ === 'Err') {
+									return splitCompress;
+								} else {
+									var resState = splitCompress.a;
+									var $temp$state = _Utils_update(
+										resState,
+										{next: lT.i});
+									state = $temp$state;
+									continue compressWithState;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+};
+var $author$project$Edgebreaker$compressPly = function (ply) {
+	var makeState = $author$project$Edgebreaker$compressInit(ply);
+	var res = function () {
+		if (makeState.$ === 'Err') {
+			var str = makeState.a;
+			return $elm$core$Result$Err(str);
+		} else {
+			var state = makeState.a;
+			return $author$project$Edgebreaker$compressWithState(state);
+		}
+	}();
+	if (res.$ === 'Err') {
+		var str = res.a;
+		return $elm$core$Result$Err(str);
+	} else {
+		var x = res.a;
+		return $elm$core$Result$Ok(
+			{clers: x.clers, delta: x.delta});
+	}
+};
 var $elm$time$Time$Posix = function (a) {
 	return {$: 'Posix', a: a};
 };
@@ -8190,6 +8602,7 @@ var $elm$file$File$Select$file = F2(
 			toMsg,
 			_File_uploadOne(mimes));
 	});
+var $elm$core$String$fromList = _String_fromList;
 var $elm_explorations$linear_algebra$Math$Vector3$getX = _MJS_v3getX;
 var $elm_explorations$linear_algebra$Math$Vector3$getY = _MJS_v3getY;
 var $elm_explorations$linear_algebra$Math$Vector3$getZ = _MJS_v3getZ;
@@ -8240,33 +8653,11 @@ var $elm$core$Array$fromList = function (list) {
 var $ianmackenzie$elm_triangular_mesh$TriangularMesh$TriangularMesh = function (a) {
 	return {$: 'TriangularMesh', a: a};
 };
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
 			f(x));
 	});
-var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
 		return !A2(
@@ -8400,27 +8791,6 @@ var $ianmackenzie$elm_3d_scene$Scene3d$Mesh$indexedFaces = function (givenMesh) 
 		return A4($ianmackenzie$elm_3d_scene$Scene3d$Types$MeshWithNormals, bounds, givenMesh, webGLMesh, $ianmackenzie$elm_3d_scene$Scene3d$Types$KeepBackFaces);
 	}
 };
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
 var $elm$parser$Parser$Expecting = function (a) {
 	return {$: 'Expecting', a: a};
 };
@@ -8920,9 +9290,8 @@ var $author$project$Ply$getNumVert = function (input) {
 	}
 };
 var $elm$core$String$lines = _String_lines;
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Ply$addCornerOps = F2(
-	function (corners, res) {
+	function (res, corners) {
 		addCornerOps:
 		while (true) {
 			if (!corners.b) {
@@ -8930,20 +9299,18 @@ var $author$project$Ply$addCornerOps = F2(
 			} else {
 				if (!corners.b.b) {
 					var c = corners.a;
-					return _List_fromArray(
-						[c]);
+					return res;
 				} else {
 					var c1 = corners.a;
 					var _v1 = corners.b;
 					var c2 = _v1.a;
 					var cs = _v1.b;
-					var minC2 = A2($elm$core$Basics$min, c2.n, c2.p);
-					var minC1 = A2($elm$core$Basics$min, c1.n, c1.p);
-					var maxC2 = A2($elm$core$Basics$max, c2.n, c2.p);
-					var maxC1 = A2($elm$core$Basics$max, c1.n, c1.p);
+					var minC2 = A2($elm$core$Basics$min, c2.nv, c2.pv);
+					var minC1 = A2($elm$core$Basics$min, c1.nv, c1.pv);
+					var maxC2 = A2($elm$core$Basics$max, c2.nv, c2.pv);
+					var maxC1 = A2($elm$core$Basics$max, c1.nv, c1.pv);
 					if (_Utils_eq(minC1, minC2) && _Utils_eq(maxC1, maxC2)) {
-						var $temp$corners = cs,
-							$temp$res = A2(
+						var $temp$res = A2(
 							$elm$core$List$cons,
 							_Utils_update(
 								c1,
@@ -8953,15 +9320,16 @@ var $author$project$Ply$addCornerOps = F2(
 								_Utils_update(
 									c2,
 									{o: c1.i}),
-								res));
-						corners = $temp$corners;
+								res)),
+							$temp$corners = cs;
 						res = $temp$res;
+						corners = $temp$corners;
 						continue addCornerOps;
 					} else {
-						var $temp$corners = A2($elm$core$List$cons, c1, res),
-							$temp$res = A2($elm$core$List$cons, c2, cs);
-						corners = $temp$corners;
+						var $temp$res = A2($elm$core$List$cons, c2, cs),
+							$temp$corners = A2($elm$core$List$cons, c1, res);
 						res = $temp$res;
+						corners = $temp$corners;
 						continue addCornerOps;
 					}
 				}
@@ -8979,9 +9347,9 @@ var $elm$core$List$append = F2(
 var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
-var $author$project$Ply$Corner = F6(
-	function (v, t, p, n, o, i) {
-		return {i: i, n: n, o: o, p: p, t: t, v: v};
+var $author$project$Ply$Corner = F8(
+	function (v, t, p, pv, n, nv, o, i) {
+		return {i: i, n: n, nv: nv, o: o, p: p, pv: pv, t: t, v: v};
 	});
 var $TSFoster$elm_tuple_extra$Tuple3$first = function (_v0) {
 	var a = _v0.a;
@@ -8997,39 +9365,46 @@ var $TSFoster$elm_tuple_extra$Tuple3$third = function (_v0) {
 };
 var $author$project$Ply$makeCorner = F2(
 	function (index, face) {
-		var c3 = A6(
+		var c3 = A8(
 			$author$project$Ply$Corner,
 			$TSFoster$elm_tuple_extra$Tuple3$third(face.verts),
 			index,
+			(index * 3) + 1,
 			$TSFoster$elm_tuple_extra$Tuple3$second(face.verts),
+			index * 3,
 			$TSFoster$elm_tuple_extra$Tuple3$first(face.verts),
 			-1,
 			(index * 3) + 2);
-		var c2 = A6(
+		var c2 = A8(
 			$author$project$Ply$Corner,
 			$TSFoster$elm_tuple_extra$Tuple3$second(face.verts),
 			index,
+			index * 3,
 			$TSFoster$elm_tuple_extra$Tuple3$first(face.verts),
+			(index * 3) + 2,
 			$TSFoster$elm_tuple_extra$Tuple3$third(face.verts),
 			-1,
 			(index * 3) + 1);
-		var c1 = A6(
+		var c1 = A8(
 			$author$project$Ply$Corner,
 			$TSFoster$elm_tuple_extra$Tuple3$first(face.verts),
 			index,
+			(index * 3) + 2,
 			$TSFoster$elm_tuple_extra$Tuple3$third(face.verts),
+			(index * 3) + 1,
 			$TSFoster$elm_tuple_extra$Tuple3$second(face.verts),
 			-1,
 			index * 3);
 		return _List_fromArray(
 			[c1, c2, c3]);
 	});
+var $elm$core$List$sortBy = _List_sortBy;
 var $author$project$Ply$cornerComp = F2(
 	function (c1, c2) {
-		var minC2 = A2($elm$core$Basics$min, c2.n, c2.p);
-		var minC1 = A2($elm$core$Basics$min, c1.n, c1.p);
-		var maxC2 = A2($elm$core$Basics$max, c2.n, c2.p);
-		var maxC1 = A2($elm$core$Basics$max, c1.n, c1.p);
+		var minC2 = A2($elm$core$Basics$min, c2.nv, c2.pv);
+		var minC1 = A2($elm$core$Basics$min, c1.nv, c1.pv);
+		var maxC2 = A2($elm$core$Basics$max, c2.nv, c2.pv);
+		var maxC1 = A2($elm$core$Basics$max, c1.nv, c1.pv);
 		return (_Utils_cmp(minC1, minC2) < 0) ? $elm$core$Basics$LT : (_Utils_eq(minC1, minC2) ? ((_Utils_cmp(maxC1, maxC2) < 0) ? $elm$core$Basics$LT : $elm$core$Basics$GT) : $elm$core$Basics$GT);
 	});
 var $elm$core$List$sortWith = _List_sortWith;
@@ -9038,29 +9413,20 @@ var $author$project$Ply$sortCorners = function (corners) {
 };
 var $author$project$Ply$makeCorners = function (faces) {
 	return A2(
-		$author$project$Ply$addCornerOps,
-		_List_Nil,
-		$author$project$Ply$sortCorners(
-			$elm$core$List$concat(
-				A2($elm$core$List$indexedMap, $author$project$Ply$makeCorner, faces))));
+		$elm$core$List$sortBy,
+		function ($) {
+			return $.i;
+		},
+		A2(
+			$author$project$Ply$addCornerOps,
+			_List_Nil,
+			$author$project$Ply$sortCorners(
+				$elm$core$List$concat(
+					A2($elm$core$List$indexedMap, $author$project$Ply$makeCorner, faces)))));
 };
-var $author$project$Ply$Face = F2(
-	function (verts, normal) {
-		return {normal: normal, verts: verts};
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm_community$list_extra$List$Extra$getAt = F2(
-	function (idx, xs) {
-		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
-			A2($elm$core$List$drop, idx, xs));
+var $author$project$Ply$Face = F3(
+	function (verts, normal, index) {
+		return {index: index, normal: normal, verts: verts};
 	});
 var $elm$parser$Parser$Forbidden = {$: 'Forbidden'};
 var $elm$parser$Parser$Advanced$andThen = F2(
@@ -9408,7 +9774,6 @@ var $author$project$Ply$sumTriple = function (_v0) {
 	var c = _v0.c;
 	return (a + b) + c;
 };
-var $elm_explorations$linear_algebra$Math$Vector3$vec3 = _MJS_v3;
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -9419,43 +9784,46 @@ var $elm$core$Maybe$withDefault = F2(
 		}
 	});
 var $author$project$Ply$parseFaces = function (input) {
-	var helper = function (str) {
-		var _v0 = A2($elm$parser$Parser$run, $author$project$Ply$parseFace, str);
-		if (_v0.$ === 'Err') {
-			return A2(
-				$author$project$Ply$Face,
-				_Utils_Tuple3(0, 0, 0),
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0));
-		} else {
-			var res = _v0.a;
-			var v3 = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 3, res));
-			var v2 = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 2, res));
-			var v1 = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 1, res));
-			return A2(
-				$author$project$Ply$Face,
-				_Utils_Tuple3(v1, v2, v3),
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0));
-		}
-	};
+	var helper = F2(
+		function (index, str) {
+			var _v0 = A2($elm$parser$Parser$run, $author$project$Ply$parseFace, str);
+			if (_v0.$ === 'Err') {
+				return A3(
+					$author$project$Ply$Face,
+					_Utils_Tuple3(0, 0, 0),
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+					index);
+			} else {
+				var res = _v0.a;
+				var v3 = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 3, res));
+				var v2 = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 2, res));
+				var v1 = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 1, res));
+				return A3(
+					$author$project$Ply$Face,
+					_Utils_Tuple3(v1, v2, v3),
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+					index);
+			}
+		});
 	return A2(
 		$elm$core$List$filter,
 		function (f) {
 			return $author$project$Ply$sumTriple(f.verts) > 0;
 		},
-		A2($elm$core$List$map, helper, input));
+		A2($elm$core$List$indexedMap, helper, input));
 };
-var $author$project$Ply$Vert = F2(
-	function (position, normal) {
-		return {normal: normal, position: position};
+var $author$project$Ply$Vert = F3(
+	function (position, normal, index) {
+		return {index: index, normal: normal, position: position};
 	});
 var $elm_explorations$linear_algebra$Math$Vector3$distance = _MJS_v3distance;
 var $elm$parser$Parser$ExpectingFloat = {$: 'ExpectingFloat'};
@@ -9504,45 +9872,48 @@ var $author$project$Ply$parseFloat = $elm$parser$Parser$oneOf(
 var $author$project$Ply$parseVert = $elm$parser$Parser$sequence(
 	{end: '', item: $author$project$Ply$parseFloat, separator: '', spaces: $elm$parser$Parser$spaces, start: '', trailing: $elm$parser$Parser$Forbidden});
 var $author$project$Ply$parseVerts = function (input) {
-	var helper = function (str) {
-		var _v0 = A2($elm$parser$Parser$run, $author$project$Ply$parseVert, str);
-		if (_v0.$ === 'Err') {
-			return A2(
-				$author$project$Ply$Vert,
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0));
-		} else {
-			var res = _v0.a;
-			var z = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 2, res));
-			var y = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 1, res));
-			var x = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 0, res));
-			var nz = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 5, res));
-			var ny = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 4, res));
-			var nx = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm_community$list_extra$List$Extra$getAt, 3, res));
-			return A2(
-				$author$project$Ply$Vert,
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, x, y, z),
-				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, nx, ny, nz));
-		}
-	};
+	var helper = F2(
+		function (index, str) {
+			var _v0 = A2($elm$parser$Parser$run, $author$project$Ply$parseVert, str);
+			if (_v0.$ === 'Err') {
+				return A3(
+					$author$project$Ply$Vert,
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+					index);
+			} else {
+				var res = _v0.a;
+				var z = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 2, res));
+				var y = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 1, res));
+				var x = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 0, res));
+				var nz = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 5, res));
+				var ny = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 4, res));
+				var nx = A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2($elm_community$list_extra$List$Extra$getAt, 3, res));
+				return A3(
+					$author$project$Ply$Vert,
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, x, y, z),
+					A3($elm_explorations$linear_algebra$Math$Vector3$vec3, nx, ny, nz),
+					index);
+			}
+		});
 	return A2(
 		$elm$core$List$filter,
 		function (v) {
@@ -9551,7 +9922,7 @@ var $author$project$Ply$parseVerts = function (input) {
 				v.position,
 				A3($elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0)) > 0;
 		},
-		A2($elm$core$List$map, helper, input));
+		A2($elm$core$List$indexedMap, helper, input));
 };
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm_community$basics_extra$Basics$Extra$maxSafeInteger = A2($elm$core$Basics$pow, 2, 53) - 1;
@@ -9778,10 +10149,7 @@ var $author$project$Ply$parsePly = function (input) {
 	var vertSpan = $author$project$Ply$plyMinCenterMax(vertList);
 	var faceLines = A2($elm$core$List$drop, numVert, noHeadLines);
 	var faceList = $author$project$Ply$parseFaces(faceLines);
-	var cornerList = A2(
-		$elm$core$Debug$log,
-		'cornerList',
-		$author$project$Ply$makeCorners(faceList));
+	var cornerList = $author$project$Ply$makeCorners(faceList);
 	return ((!numVert) || ((!numFace) || (!headerEnd))) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
 		{center: vertSpan.center, corners: cornerList, edges: _List_Nil, faces: faceList, maxCoord: vertSpan.max, minCoord: vertSpan.min, nface: numFace, nvert: numVert, verts: vertList});
 };
@@ -9902,7 +10270,8 @@ var $author$project$Main$update = F2(
 								centerY: $elm_explorations$linear_algebra$Math$Vector3$getY(p.center),
 								centerZ: $elm_explorations$linear_algebra$Math$Vector3$getZ(p.center),
 								mesh1: meshOut,
-								ply: $elm$core$Maybe$Just(content)
+								ply: $elm$core$Maybe$Just(content),
+								savedPly: p
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
@@ -9918,7 +10287,7 @@ var $author$project$Main$update = F2(
 						model,
 						{orbiting: false}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'MouseMove':
 				var dx = msg.a;
 				var dy = msg.b;
 				if (model.orbiting) {
@@ -9946,8 +10315,29 @@ var $author$project$Main$update = F2(
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
+			default:
+				var _v3 = $author$project$Edgebreaker$compressPly(model.savedPly);
+				if (_v3.$ === 'Err') {
+					var e = _v3.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{clersRes: e}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var res = _v3.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								clersRes: $elm$core$String$fromList(
+									$elm$core$List$reverse(res.clers))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 		}
 	});
+var $author$project$Main$EdgeBreak = {$: 'EdgeBreak'};
 var $author$project$Main$PlyRequested = {$: 'PlyRequested'};
 var $ianmackenzie$elm_3d_scene$Scene3d$BackgroundColor = function (a) {
 	return {$: 'BackgroundColor', a: a};
@@ -9976,6 +10366,12 @@ var $ianmackenzie$elm_3d_scene$Scene3d$Light$colorTemperature = function (temper
 	var y = (t <= 2222) ? (((((-1.1063814) * ((x * x) * x)) - (1.3481102 * (x * x))) + (2.18555832 * x)) - 0.20219683) : ((t <= 4000) ? (((((-0.9549476) * ((x * x) * x)) - (1.37418593 * (x * x))) + (2.09137015 * x)) - 0.16748867) : ((((3.081758 * ((x * x) * x)) - (5.8733867 * (x * x))) + (3.75112997 * x)) - 0.37001483));
 	return $ianmackenzie$elm_3d_scene$Scene3d$Light$chromaticity(
 		{x: x, y: y});
+};
+var $elm$html$Html$Attributes$cols = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'cols',
+		$elm$core$String$fromInt(n));
 };
 var $elm_explorations$webgl$WebGL$Internal$Alpha = function (a) {
 	return {$: 'Alpha', a: a};
@@ -11326,6 +11722,7 @@ var $ianmackenzie$elm_3d_scene$Scene3d$exposureValue = function (ev100) {
 		$ianmackenzie$elm_units$Luminance$nits(
 			1.2 * A2($elm$core$Basics$pow, 2, ev100)));
 };
+var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $ianmackenzie$elm_3d_scene$Scene3d$Light$incandescent = $ianmackenzie$elm_3d_scene$Scene3d$Light$chromaticity(
 	{x: 0.44757, y: 0.40745});
 var $ianmackenzie$elm_units$Temperature$Temperature = function (a) {
@@ -12904,6 +13301,12 @@ var $ianmackenzie$elm_3d_camera$Camera3d$perspective = function (_arguments) {
 			viewpoint: _arguments.viewpoint
 		});
 };
+var $elm$html$Html$Attributes$rows = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'rows',
+		$elm$core$String$fromInt(n));
+};
 var $ianmackenzie$elm_3d_scene$Scene3d$Supersampling = function (a) {
 	return {$: 'Supersampling', a: a};
 };
@@ -12912,6 +13315,16 @@ var $ianmackenzie$elm_3d_scene$Scene3d$supersampling = function (factor) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$textarea = _VirtualDom_node('textarea');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$view = function (model) {
 	var _v0 = model.ply;
 	if (_v0.$ === 'Nothing') {
@@ -12989,7 +13402,27 @@ var $author$project$Main$view = function (model) {
 							_List_fromArray(
 								[
 									$elm$html$Html$text('Load PLY')
-								]))
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Main$EdgeBreak)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Try Edgebreak')
+								])),
+							A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+							A2(
+							$elm$html$Html$textarea,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$rows(10),
+									$elm$html$Html$Attributes$cols(60),
+									$elm$html$Html$Attributes$value(model.clersRes)
+								]),
+							_List_Nil)
 						])),
 					$ianmackenzie$elm_3d_scene$Scene3d$custom(
 					{

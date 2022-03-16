@@ -10,7 +10,7 @@ import Direction3d
 import File exposing(File)
 import File.Select as Select
 import Html exposing (Html, button, p, text, div)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (rows, cols, style, type_, checked, placeholder, value, hidden)
 import Html.Events exposing (onClick)
 import Illuminance
 import LuminousFlux exposing (LuminousFlux)
@@ -36,7 +36,11 @@ import Vector3d exposing (Vector3d)
 import TriangularMesh exposing (TriangularMesh)
 import Math.Vector3 exposing (Vec3, getX, getY, getZ)
 import Ply exposing (PlyModel)
+import Edgebreaker as EB
 import Html.Attributes exposing (height)
+import Ply exposing (emptyPly)
+import Html exposing (textarea)
+import Html exposing (hr)
 
 type WorldCoordinates
     = WorldCoordinates
@@ -54,6 +58,8 @@ type alias Model =
   , centerX : Float
   , centerY : Float
   , centerZ : Float
+  , savedPly : Ply.PlyModel
+  , clersRes : String
   }
 
 init : () -> ( Model, Cmd Msg )
@@ -69,6 +75,8 @@ init () =
     , centerX = 0
     , centerY = 0
     , centerZ = 0
+    , savedPly = emptyPly
+    , clersRes = ""
     }
   , Task.perform
       (\{ viewport } ->
@@ -100,6 +108,7 @@ type Msg
   | MouseDown
   | MouseUp
   | MouseMove (Quantity Float Pixels) (Quantity Float Pixels)
+  | EdgeBreak
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -112,7 +121,8 @@ update msg model =
       in case plyOut of
         Nothing -> ( { model | mesh1 = meshOut, ply = Just content }, Cmd.none)
         Just p -> ( { model | mesh1 = meshOut
-                    , ply = Just content 
+                    , ply = Just content
+                    , savedPly = p
                     , centerX = getX p.center
                     , centerY = getY p.center
                     , centerZ = getZ p.center
@@ -130,6 +140,10 @@ update msg model =
             in
             ( { model | azimuth = newAzimuth, elevation = newElevation }, Cmd.none)
         else ( model, Cmd.none )
+    EdgeBreak ->
+      case EB.compressPly model.savedPly of
+          Err e -> ( {model| clersRes = e}, Cmd.none )
+          Ok res -> ( {model| clersRes = res.clers |> List.reverse |> String.fromList}, Cmd.none )
 
 decodeMouseMove : Decoder Msg
 decodeMouseMove =
@@ -196,7 +210,11 @@ view model =
           , style "left" "5px"
           , style "z-index" "3"
           ]
-          [ button [ onClick PlyRequested] [ text "Load PLY" ] ]
+          [ button [ onClick PlyRequested] [ text "Load PLY" ]
+          , button [ onClick EdgeBreak] [ text "Try Edgebreak" ]
+          , hr [] []
+          , textarea [rows 10, cols 60, value model.clersRes] []
+          ]
         , Scene3d.custom
           { camera = camera
           , clipDepth = Length.meters 0.1
