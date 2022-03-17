@@ -423,6 +423,7 @@ view model =
             { viewpoint = viewpoint
             , verticalFieldOfView = Angle.degrees model.fov
             }
+        colorBox color = div [style "width" "15px", style "height" "15px", style "background-color" color, style "border-radius" "3px"] []
       in
       { title = "Viewing " ++ model.filename
       , body =
@@ -452,11 +453,11 @@ view model =
                   ,  hr [] []
                   , "Edgebreaker Output:" |> text |> singleton |> h2 [style "margin" "0px"]
                   , "CLERS Frequency:" |> text |> singleton |> h3 [style "margin-bottom" "0px"]
-                  , "C: " ++ (List.Extra.count (\c -> c == 'C') res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
-                  , "R: " ++ (List.Extra.count (\c -> c == 'R') res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
-                  , "L: " ++ (List.Extra.count (\c -> c == 'L') res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
-                  , "S: " ++ (List.Extra.count (\c -> c == 'S') res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
-                  , "E: " ++ (List.Extra.count (\c -> c == 'E') res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
+                  , "C: " ++ (List.Extra.count (\c -> c == 'C') res.clers |> String.fromInt)  |> text |> singleton |> (::) (colorBox "rgb(0,255,255)") |> p [style "margin" "0px", style "display" "flex"]
+                  , "R: " ++ (List.Extra.count (\c -> c == 'R') res.clers |> String.fromInt)  |> text |> singleton |> (::) (colorBox "rgb(255,0,0)")   |> p [style "margin" "0px", style "display" "flex"]
+                  , "L: " ++ (List.Extra.count (\c -> c == 'L') res.clers |> String.fromInt)  |> text |> singleton |> (::) (colorBox "rgb(0,190,0)") |> p [style "margin" "0px", style "display" "flex"]
+                  , "S: " ++ (List.Extra.count (\c -> c == 'S') res.clers |> String.fromInt)  |> text |> singleton |> (::) (colorBox "rgb(0,0,255)")   |> p [style "margin" "0px", style "display" "flex"]
+                  , "E: " ++ (List.Extra.count (\c -> c == 'E') res.clers |> String.fromInt)  |> text |> singleton |> (::) (colorBox "rgb(255,255,0)")   |> p [style "margin" "0px", style "display" "flex"]
                   , "Total: " ++ (List.length res.clers |> String.fromInt)  |> text |> singleton |> p [style "margin" "0px"]
                   , "Complete CLERS Output:" |> text |> singleton |> h3 []
                   , textarea [rows 6, cols 30, value (String.fromList res.clers)] []

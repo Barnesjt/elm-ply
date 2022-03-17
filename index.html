@@ -15686,6 +15686,18 @@ var $author$project$Main$view = function (model) {
 			var eMaterial = $ianmackenzie$elm_3d_scene$Scene3d$Material$matte(
 				A3($avh4$elm_color$Color$rgb255, 255, 255, 0));
 			var eEntity = A2($ianmackenzie$elm_3d_scene$Scene3d$mesh, eMaterial, model.meshE);
+			var colorBox = function (color) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'width', '15px'),
+							A2($elm$html$Html$Attributes$style, 'height', '15px'),
+							A2($elm$html$Html$Attributes$style, 'background-color', color),
+							A2($elm$html$Html$Attributes$style, 'border-radius', '3px')
+						]),
+					_List_Nil);
+			};
 			var camera = $ianmackenzie$elm_3d_camera$Camera3d$perspective(
 				{
 					verticalFieldOfView: $ianmackenzie$elm_units$Angle$degrees(model.fov),
@@ -15820,87 +15832,107 @@ var $author$project$Main$view = function (model) {
 												$elm$html$Html$p,
 												_List_fromArray(
 													[
-														A2($elm$html$Html$Attributes$style, 'margin', '0px')
+														A2($elm$html$Html$Attributes$style, 'margin', '0px'),
+														A2($elm$html$Html$Attributes$style, 'display', 'flex')
 													]),
-												$elm$core$List$singleton(
-													$elm$html$Html$text(
-														'C: ' + $elm$core$String$fromInt(
-															A2(
-																$elm_community$list_extra$List$Extra$count,
-																function (c) {
-																	return _Utils_eq(
-																		c,
-																		_Utils_chr('C'));
-																},
-																res.clers))))),
+												A2(
+													$elm$core$List$cons,
+													colorBox('rgb(0,255,255)'),
+													$elm$core$List$singleton(
+														$elm$html$Html$text(
+															'C: ' + $elm$core$String$fromInt(
+																A2(
+																	$elm_community$list_extra$List$Extra$count,
+																	function (c) {
+																		return _Utils_eq(
+																			c,
+																			_Utils_chr('C'));
+																	},
+																	res.clers)))))),
 												A2(
 												$elm$html$Html$p,
 												_List_fromArray(
 													[
-														A2($elm$html$Html$Attributes$style, 'margin', '0px')
+														A2($elm$html$Html$Attributes$style, 'margin', '0px'),
+														A2($elm$html$Html$Attributes$style, 'display', 'flex')
 													]),
-												$elm$core$List$singleton(
-													$elm$html$Html$text(
-														'R: ' + $elm$core$String$fromInt(
-															A2(
-																$elm_community$list_extra$List$Extra$count,
-																function (c) {
-																	return _Utils_eq(
-																		c,
-																		_Utils_chr('R'));
-																},
-																res.clers))))),
+												A2(
+													$elm$core$List$cons,
+													colorBox('rgb(255,0,0)'),
+													$elm$core$List$singleton(
+														$elm$html$Html$text(
+															'R: ' + $elm$core$String$fromInt(
+																A2(
+																	$elm_community$list_extra$List$Extra$count,
+																	function (c) {
+																		return _Utils_eq(
+																			c,
+																			_Utils_chr('R'));
+																	},
+																	res.clers)))))),
 												A2(
 												$elm$html$Html$p,
 												_List_fromArray(
 													[
-														A2($elm$html$Html$Attributes$style, 'margin', '0px')
+														A2($elm$html$Html$Attributes$style, 'margin', '0px'),
+														A2($elm$html$Html$Attributes$style, 'display', 'flex')
 													]),
-												$elm$core$List$singleton(
-													$elm$html$Html$text(
-														'L: ' + $elm$core$String$fromInt(
-															A2(
-																$elm_community$list_extra$List$Extra$count,
-																function (c) {
-																	return _Utils_eq(
-																		c,
-																		_Utils_chr('L'));
-																},
-																res.clers))))),
+												A2(
+													$elm$core$List$cons,
+													colorBox('rgb(0,190,0)'),
+													$elm$core$List$singleton(
+														$elm$html$Html$text(
+															'L: ' + $elm$core$String$fromInt(
+																A2(
+																	$elm_community$list_extra$List$Extra$count,
+																	function (c) {
+																		return _Utils_eq(
+																			c,
+																			_Utils_chr('L'));
+																	},
+																	res.clers)))))),
 												A2(
 												$elm$html$Html$p,
 												_List_fromArray(
 													[
-														A2($elm$html$Html$Attributes$style, 'margin', '0px')
+														A2($elm$html$Html$Attributes$style, 'margin', '0px'),
+														A2($elm$html$Html$Attributes$style, 'display', 'flex')
 													]),
-												$elm$core$List$singleton(
-													$elm$html$Html$text(
-														'S: ' + $elm$core$String$fromInt(
-															A2(
-																$elm_community$list_extra$List$Extra$count,
-																function (c) {
-																	return _Utils_eq(
-																		c,
-																		_Utils_chr('S'));
-																},
-																res.clers))))),
+												A2(
+													$elm$core$List$cons,
+													colorBox('rgb(0,0,255)'),
+													$elm$core$List$singleton(
+														$elm$html$Html$text(
+															'S: ' + $elm$core$String$fromInt(
+																A2(
+																	$elm_community$list_extra$List$Extra$count,
+																	function (c) {
+																		return _Utils_eq(
+																			c,
+																			_Utils_chr('S'));
+																	},
+																	res.clers)))))),
 												A2(
 												$elm$html$Html$p,
 												_List_fromArray(
 													[
-														A2($elm$html$Html$Attributes$style, 'margin', '0px')
+														A2($elm$html$Html$Attributes$style, 'margin', '0px'),
+														A2($elm$html$Html$Attributes$style, 'display', 'flex')
 													]),
-												$elm$core$List$singleton(
-													$elm$html$Html$text(
-														'E: ' + $elm$core$String$fromInt(
-															A2(
-																$elm_community$list_extra$List$Extra$count,
-																function (c) {
-																	return _Utils_eq(
-																		c,
-																		_Utils_chr('E'));
-																},
-																res.clers))))),
+												A2(
+													$elm$core$List$cons,
+													colorBox('rgb(255,255,0)'),
+													$elm$core$List$singleton(
+														$elm$html$Html$text(
+															'E: ' + $elm$core$String$fromInt(
+																A2(
+																	$elm_community$list_extra$List$Extra$count,
+																	function (c) {
+																		return _Utils_eq(
+																			c,
+																			_Utils_chr('E'));
+																	},
+																	res.clers)))))),
 												A2(
 												$elm$html$Html$p,
 												_List_fromArray(
