@@ -1,4 +1,4 @@
-module Edgebreaker exposing (compressPly, EBRes)
+module Edgebreaker exposing (compressPly, EBRes, ClersParse)
 
 import Ply
 import Math.Vector3 exposing (Vec3, sub, add)
@@ -20,6 +20,15 @@ type alias EBRes =
   , verts : List Int
   , faces : List Int
   , origPly : Ply.PlyModel
+  , clersFaces : ClersParse
+  }
+
+type alias ClersParse =
+  { c : List Int
+  , l : List Int
+  , e : List Int
+  , r : List Int
+  , s : List Int
   }
 
 compressPly : Ply.PlyModel -> Result String EBRes
@@ -30,35 +39,53 @@ compressPly ply =
       case makeState of
         Err str -> Err str
         Ok state -> compressWithState state
+
+    getClersFaces : ClersParse -> List Char -> List Int -> ClersParse
+    getClersFaces input clers faces =
+      case clers of
+        [] -> input
+        (next::rem) -> case faces of
+          [] -> input
+          (f::fs) -> case next of
+            'C' -> getClersFaces {input | c = f::input.c} rem fs
+            'L' -> getClersFaces {input | l = f::input.l} rem fs
+            'E' -> getClersFaces {input | e = f::input.e} rem fs
+            'R' -> getClersFaces {input | r = f::input.r} rem fs
+            _ ->   getClersFaces {input | s = f::input.s} rem fs
+    clersFaces x = getClersFaces {c=[], l=[], e=[], r=[], s=[]} (x.clers |> List.reverse) (x.vTri |> List.reverse)
   in
     case res of
       Err str -> Err str
-      Ok x -> Ok 
+      Ok x ->
+        let clersFaceLists = clersFaces x
+        in
+        Ok 
         { delta = x.delta |> List.reverse
         , clers = x.clers |> List.reverse
         , verts = x.vVert |> List.reverse
         , faces = x.vTri |> List.reverse
         , origPly = ply
+        , clersFaces = clersFaceLists
         }
 
 compressWithState : EBState -> Result String EBState
 compressWithState state =
   case getAt state.next state.ply.corners of
-    Nothing -> "Failed to get corner " ++ Debug.toString state.next |> Err
+    Nothing -> "Failed to get corner " ++ String.fromInt state.next |> Err
     Just c ->
       let newVTri = c.t :: state.vTri
           rTri = --c.n.o.t
             case getAt c.n state.ply.corners of
-              Nothing -> "Failed to get corner " ++ Debug.toString c.n |> Err
+              Nothing -> "Failed to get corner " ++ String.fromInt c.n |> Err
               Just n -> case getAt n.o state.ply.corners of
-                Nothing -> "Failed to get corner " ++ Debug.toString n.o |> Err
+                Nothing -> "Failed to get corner " ++ String.fromInt n.o |> Err
                 Just o -> Ok o
           
           lTri = --c.p.o.t
             case getAt c.p state.ply.corners of
-              Nothing -> "Failed to get corner " ++ Debug.toString c.p |> Err
+              Nothing -> "Failed to get corner " ++ String.fromInt c.p |> Err
               Just p -> case getAt p.o state.ply.corners of
-                Nothing -> "Failed to get corner " ++ Debug.toString p.o |> Err
+                Nothing -> "Failed to get corner " ++ String.fromInt p.o |> Err
                 Just o -> Ok o
       in
       if member c.v state.vVert |> not then --if it's not visited already, we do the procedure for the C op
@@ -66,24 +93,24 @@ compressWithState state =
           newClers = 'C' :: state.clers
           newVVert = c.v :: state.vVert
           cvPos = case getAt c.v state.ply.verts of
-            Nothing -> "Failed to get vertex " ++ Debug.toString c.v |> Err
+            Nothing -> "Failed to get vertex " ++ String.fromInt c.v |> Err
             Just cv -> Ok cv.position
           cpvPos = case getAt c.p state.ply.corners of
-            Nothing -> "Failed to get corner " ++ Debug.toString c.p |> Err
+            Nothing -> "Failed to get corner " ++ String.fromInt c.p |> Err
             Just cp -> case getAt cp.v state.ply.verts of
-              Nothing -> "Failed to get vertex " ++ Debug.toString cp.v |> Err
+              Nothing -> "Failed to get vertex " ++ String.fromInt cp.v |> Err
               Just cpv -> Ok cpv.position
           
           cnvPos = case getAt c.n state.ply.corners of
-            Nothing -> "Failed to get corner " ++ Debug.toString c.n |> Err
+            Nothing -> "Failed to get corner " ++ String.fromInt c.n |> Err
             Just cn -> case getAt cn.v state.ply.verts of
-              Nothing -> "Failed to get vertex " ++ Debug.toString cn.v |> Err
+              Nothing -> "Failed to get vertex " ++ String.fromInt cn.v |> Err
               Just cnv -> Ok cnv.position
 
           covPos = case getAt c.o state.ply.corners of
-            Nothing -> "Failed to get corner " ++ Debug.toString c.o |> Err
+            Nothing -> "Failed to get corner " ++ String.fromInt c.o |> Err
             Just co -> case getAt co.v state.ply.verts of
-              Nothing -> "Failed to get vertex " ++ Debug.toString co.v |> Err
+              Nothing -> "Failed to get vertex " ++ String.fromInt co.v |> Err
               Just cov -> Ok cov.position
 
           deltToAdd = -- c.v.pos - c.p.v.pos - c.n.v.pos + c.o.v.pos
