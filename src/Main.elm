@@ -9,8 +9,8 @@ import Color
 import Direction3d
 import File exposing(File)
 import File.Select as Select
-import Html exposing (Html, button, p, text, div)
-import Html.Attributes exposing (rows, cols, style, type_, checked, placeholder, value, hidden)
+import Html exposing (Html, button, p, text, div, textarea, hr)
+import Html.Attributes exposing (rows, cols, style, type_, checked, placeholder, value, hidden, height)
 import Html.Events exposing (onClick)
 import Illuminance
 import LuminousFlux exposing (LuminousFlux)
@@ -25,22 +25,19 @@ import Scene3d.Material as Material
 import Scene3d.Mesh as Mesh exposing (Mesh)
 import SolidAngle
 import Sphere3d
+import String
 import Task
 import Temperature
 import Triangle3d
 import Viewpoint3d
-import Ply exposing (parsePly)
+import Ply
 import Array
 import Point3d exposing (Point3d)
 import Vector3d exposing (Vector3d)
 import TriangularMesh exposing (TriangularMesh)
 import Math.Vector3 exposing (Vec3, getX, getY, getZ)
-import Ply exposing (PlyModel)
 import Edgebreaker as EB
-import Html.Attributes exposing (height)
-import Ply exposing (emptyPly)
-import Html exposing (textarea)
-import Html exposing (hr)
+import Dict exposing (Dict)
 
 type WorldCoordinates
     = WorldCoordinates
@@ -58,8 +55,9 @@ type alias Model =
   , centerX : Float
   , centerY : Float
   , centerZ : Float
-  , savedPly : Ply.PlyModel
-  , clersRes : String
+  , savedPly : Maybe Ply.PlyModel
+  , ebRes : Maybe EB.EBRes
+  , errorText : String
   }
 
 init : () -> ( Model, Cmd Msg )
@@ -75,8 +73,9 @@ init () =
     , centerX = 0
     , centerY = 0
     , centerZ = 0
-    , savedPly = emptyPly
-    , clersRes = ""
+    , savedPly = Nothing
+    , ebRes = Nothing
+    , errorText = ""
     }
   , Task.perform
       (\{ viewport } ->
@@ -87,9 +86,25 @@ init () =
       Browser.Dom.getViewport
   )
 
-parsePlyToMesh : String -> (Maybe PlyModel, Mesh.Uniform WorldCoordinates)
-parsePlyToMesh ply = case parsePly ply of
-  Nothing -> (Nothing, Mesh.facets [Triangle3d.from (Point3d.meters 0 0 0) (Point3d.meters 1 0 0) (Point3d.meters 1 1 0) ])
+homePageUrl : String
+homePageUrl = "https://barnesjt.github.io/elm-ply/"
+
+plyFiles : Dict String String
+plyFiles =
+  Dict.fromList
+    [ ("Tetrahedron (4 faces)","https://barnesjt.github.io/elm-ply/ply-files/tetrahedron.ply")
+    , ("Octahedron (8 faces)","https://barnesjt.github.io/elm-ply/ply-files/octahedron.ply")
+    , ("Icosahedron (20 faces)","https://barnesjt.github.io/elm-ply/ply-files/icosahedron.ply")
+    , ("Sphere (8192 faces)", "https://barnesjt.github.io/elm-ply/ply-files/sphere.ply")
+    , ("Bunny (10k faces)", "https://barnesjt.github.io/elm-ply/ply-files/bunny.ply")
+    , ("Dragon (20k faces, 1 handle)","https://barnesjt.github.io/elm-ply/ply-files/dragon.ply")
+    , ("Feline (10k faces, 2 handles)","https://barnesjt.github.io/elm-ply/ply-files/feline.ply")
+    , ("Buddha (20k faces, 6 handles)","https://barnesjt.github.io/elm-ply/ply-files/happy.ply")
+    ]
+
+parsePlyToMesh : String -> (Maybe Ply.PlyModel, Mesh.Uniform WorldCoordinates)
+parsePlyToMesh ply = case Ply.parsePly ply of
+  Nothing -> (Nothing, Mesh.facets [])
   Just x ->
     let
       extractVert v =
@@ -122,7 +137,7 @@ update msg model =
         Nothing -> ( { model | mesh1 = meshOut, ply = Just content }, Cmd.none)
         Just p -> ( { model | mesh1 = meshOut
                     , ply = Just content
-                    , savedPly = p
+                    , savedPly = Just p
                     , centerX = getX p.center
                     , centerY = getY p.center
                     , centerZ = getZ p.center
@@ -141,9 +156,11 @@ update msg model =
             ( { model | azimuth = newAzimuth, elevation = newElevation }, Cmd.none)
         else ( model, Cmd.none )
     EdgeBreak ->
-      case EB.compressPly model.savedPly of
-          Err e -> ( {model| clersRes = e}, Cmd.none )
-          Ok res -> ( {model| clersRes = res.clers |> List.reverse |> String.fromList}, Cmd.none )
+      case model.savedPly of
+        Nothing -> ({model| errorText = "No Valid Ply Model Loaded"}, Cmd.none)
+        Just m -> case EB.compressPly m of
+          Err e -> ( {model| errorText = e}, Cmd.none )
+          Ok res -> ( {model| ebRes = Just res}, Cmd.none )
 
 decodeMouseMove : Decoder Msg
 decodeMouseMove =
@@ -192,14 +209,14 @@ view model =
         plyEntity = Scene3d.mesh entityMaterial model.mesh1
         softLighting =
           Light.overhead
-            { upDirection = Direction3d.negativeZ
+            { upDirection = Direction3d.positiveZ
             , chromaticity = Light.colorTemperature (Temperature.kelvins 1500)
             , intensity = Illuminance.lux 70
             }
         camera =
           Camera3d.perspective
             { viewpoint = viewpoint
-            , verticalFieldOfView = Angle.degrees 50
+            , verticalFieldOfView = Angle.degrees 80
             }
       in
       { title = "Viewing " ++ model.filename
@@ -213,7 +230,9 @@ view model =
           [ button [ onClick PlyRequested] [ text "Load PLY" ]
           , button [ onClick EdgeBreak] [ text "Try Edgebreak" ]
           , hr [] []
-          , textarea [rows 10, cols 60, value model.clersRes] []
+          , case model.ebRes of
+              Nothing -> div [] []
+              Just res -> textarea [rows 10, cols 40, value (String.fromList res.clers)] []
           ]
         , Scene3d.custom
           { camera = camera

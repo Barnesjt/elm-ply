@@ -17,6 +17,9 @@ type alias EBState =
 type alias EBRes =
   { delta : List Vec3
   , clers : List Char
+  , verts : List Int
+  , faces : List Int
+  , origPly : Ply.PlyModel
   }
 
 compressPly : Ply.PlyModel -> Result String EBRes
@@ -30,14 +33,19 @@ compressPly ply =
   in
     case res of
       Err str -> Err str
-      Ok x -> Ok {delta = x.delta, clers = x.clers}
+      Ok x -> Ok 
+        { delta = x.delta |> List.reverse
+        , clers = x.clers |> List.reverse
+        , verts = x.vVert |> List.reverse
+        , faces = x.vTri |> List.reverse
+        , origPly = ply
+        }
 
 compressWithState : EBState -> Result String EBState
 compressWithState state =
   case getAt state.next state.ply.corners of
     Nothing -> "Failed to get corner " ++ Debug.toString state.next |> Err
     Just c ->
-      -- if List.length state.clers > 8 then Ok state else
       let newVTri = c.t :: state.vTri
           rTri = --c.n.o.t
             case getAt c.n state.ply.corners of
