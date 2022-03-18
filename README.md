@@ -1,6 +1,6 @@
-# Edgebreaker in Elm
-
 ![image](https://user-images.githubusercontent.com/43552143/158927694-11376864-580b-4a18-9e4f-cf001b17535c.png)
+
+# Edgebreaker in Elm
 
 An Elm application for running the Edgebreaker algorithm against ply files which encode triangular meshes.
 
