@@ -31,5 +31,11 @@ On the left-hand side is:
 
 This is not recommended for most users, as a working version of the application can be accessed from any modern browser. Nevertheless, it is relatively simple to build this yourself. You will just need to install Elm: https://guide.elm-lang.org/install/elm.html, clone the repository and either run ```elm reactor``` to run locally, or ```elm make src/Main.elm``` to build an HTML file. No additional setup or custom html is required for this application.
 
+## Attributions
+
+- Original Edgebreaker paper: https://faculty.cc.gatech.edu/~jarek/papers/EdgeBreaker.pdf
+- Edgebreaker with corner tables: https://www.cs.cmu.edu/~alla/edgebreaker_simple.pdf
+- Some code (mouse controls, window resizing, 3d rendering) based from examples in the 3d-screen package: https://github.com/ianmackenzie/elm-3d-scene/blob/main/examples/README.md
+
 ## Future Work
 - Load in custom encoding data to display original geometry
