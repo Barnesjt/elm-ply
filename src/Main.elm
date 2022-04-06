@@ -118,7 +118,7 @@ init () =
   )
 
 homePageUrl : String
-homePageUrl = "https://barnesjt.github.io/elm-ply/"
+homePageUrl = "https://jackbarnes.dev/elm-ply/"
 
 repositoryUrl : String
 repositoryUrl = "https://github.com/barnesjt/elm-ply"
@@ -131,14 +131,14 @@ edgebreakerCornerUrl = "https://faculty.cc.gatech.edu/~jarek/papers/EdgeBreaker.
 
 plyFiles : List (String,String)
 plyFiles =
-    [ ("Tetrahedron (4 faces)","https://barnesjt.github.io/elm-ply/ply-files/tetrahedron.ply")
-    , ("Octahedron (8 faces)","https://barnesjt.github.io/elm-ply/ply-files/octahedron.ply")
-    , ("Icosahedron (20 faces)","https://barnesjt.github.io/elm-ply/ply-files/icosahedron.ply")
-    , ("Sphere (8192 faces)", "https://barnesjt.github.io/elm-ply/ply-files/sphere.ply")
-    , ("Bunny (10k faces)", "https://barnesjt.github.io/elm-ply/ply-files/bunny.ply")
-    , ("Dragon (20k faces, 1 handle)","https://barnesjt.github.io/elm-ply/ply-files/dragon.ply")
-    , ("Feline (10k faces, 2 handles)","https://barnesjt.github.io/elm-ply/ply-files/feline.ply")
-    , ("Buddha (20k faces, 6 handles)","https://barnesjt.github.io/elm-ply/ply-files/happy.ply")
+    [ ("Tetrahedron (4 faces)","https://jackbarnes.dev/elm-ply/ply-files/tetrahedron.ply")
+    , ("Octahedron (8 faces)","https://jackbarnes.dev/elm-ply/ply-files/octahedron.ply")
+    , ("Icosahedron (20 faces)","https://jackbarnes.dev/elm-ply/ply-files/icosahedron.ply")
+    , ("Sphere (8192 faces)", "https://jackbarnes.dev/elm-ply/ply-files/sphere.ply")
+    , ("Bunny (10k faces)", "https://jackbarnes.dev/elm-ply/ply-files/bunny.ply")
+    , ("Dragon (20k faces, 1 handle)","https://jackbarnes.dev/elm-ply/ply-files/dragon.ply")
+    , ("Feline (10k faces, 2 handles)","https://jackbarnes.dev/elm-ply/ply-files/feline.ply")
+    , ("Buddha (20k faces, 6 handles)","https://jackbarnes.dev/elm-ply/ply-files/happy.ply")
     ]
 
 plyItems : List Dropdown.Item
